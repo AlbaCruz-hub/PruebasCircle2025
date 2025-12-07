@@ -34,7 +34,7 @@ public class UserServiceIntegrationTest extends DBTestCase {
 
     public UserServiceIntegrationTest() {
         System.setProperty(PropertiesBasedJdbcDatabaseTester.DBUNIT_DRIVER_CLASS, "com.mysql.cj.jdbc.Driver");
-        System.setProperty(PropertiesBasedJdbcDatabaseTester.DBUNIT_CONNECTION_URL, "jdbc:mysql://localhost:3307/calidad");
+        System.setProperty(PropertiesBasedJdbcDatabaseTester.DBUNIT_CONNECTION_URL, "jdbc:mysql://localhost:3306/calidad");
         System.setProperty(PropertiesBasedJdbcDatabaseTester.DBUNIT_USERNAME, "root");
         System.setProperty(PropertiesBasedJdbcDatabaseTester.DBUNIT_PASSWORD, "123456");
     }
@@ -51,8 +51,20 @@ public class UserServiceIntegrationTest extends DBTestCase {
             } else{
                 System.out.println("Connection established successfully");
             }
-            //Reiniciar el contador de Auto_Increment a 1
-            //Esto es crucial para que el ID sea 1 y coincida con el XML
+
+            // --- CREAR LA TABLA SI NO EXISTE ---
+            // CircleCI inicia con la BD vacía, así que se debe crear la estructura primero.
+            connection.getConnection().createStatement().execute(
+                "CREATE TABLE IF NOT EXISTS usuarios (" +
+                "id int NOT NULL AUTO_INCREMENT, " +
+                "name varchar(100) NOT NULL, " +
+                "email varchar(150) NOT NULL, " +
+                "password varchar(255) NOT NULL, " +
+                "isLogged tinyint(1) DEFAULT '0', " +
+                "PRIMARY KEY (id), " +
+                "UNIQUE KEY email (email))"
+            );
+            // Se va a reiniciar el contador y limpiar la tabla
             connection.getConnection().createStatement().execute("ALTER TABLE usuarios AUTO_INCREMENT = 1");
             DatabaseOperation.TRUNCATE_TABLE.execute(connection, getDataSet());
             DatabaseOperation.CLEAN_INSERT.execute(connection, getDataSet());
@@ -159,21 +171,31 @@ public class UserServiceIntegrationTest extends DBTestCase {
         try{
             //Insertar usuarios
             IDatabaseConnection conn = getConnection();
+
+            //Se carga el dataset
             IDataSet initialDataSet = new FlatXmlDataSetBuilder().build(new File("src/resources/addUser.xml"));
             DatabaseOperation.CLEAN_INSERT.execute(conn, initialDataSet);
 
-            //Ejecutar
-            Usuario result = service.findUserByEmail("user1@gmail.com");
+            //Se extrae la tabla del dataset para comparar los valores
+            ITable expectedTable = initialDataSet.getTable("usuarios");
 
-            //Verificar
+            //Se obtiene el email dinámicamente de la fila 0 del dataset
+            String emailABuscar = (String) expectedTable.getValue(0, "email");
+
+            //Ejecutar
+            Usuario result = service.findUserByEmail(emailABuscar);
+
+            //Verificar comparando contra el dataset
             assertNotNull(result);
-            assertEquals("user1", result.getName());
-            assertEquals("12345678", result.getPassword());
+            assertEquals(expectedTable.getValue(0,"name"), result.getName());
+            assertEquals(expectedTable.getValue(0, "password"), result.getPassword());
+            assertEquals(expectedTable.getValue(0, "email"), result.getEmail());
 
             conn.close();
-        } catch (Exception e){
-            fail("Error in findByEmail test: " + e.getMessage());
+        }catch (Exception e){
+            fail("Error in findByEmail test: "+ e.getMessage());
         }
+       
     }
 
     //5. Busca todo
@@ -181,22 +203,29 @@ public class UserServiceIntegrationTest extends DBTestCase {
     public void buscaTodo(){
         try{
             //Insertar varios usuarios
-        IDatabaseConnection conn = getConnection();
-        IDataSet initialDataSet = new FlatXmlDataSetBuilder().build(new File("src/resources/initDB.xml"));
-        DatabaseOperation.CLEAN_INSERT.execute(conn, initialDataSet);
+            IDatabaseConnection conn = getConnection();
+            IDataSet initialDataSet = new FlatXmlDataSetBuilder().build(new File("src/resources/initDB.xml"));
+            DatabaseOperation.CLEAN_INSERT.execute(conn, initialDataSet);
 
-        //Ejecutar
-        List<Usuario> result = service.findAllUsers();
-        
-        //Verificar
-        assertNotNull(result);
-        assertEquals(3, result.size());
-        assertEquals("user1", result.get(0).getName());
+            //Se obtiene la tabla esperada del XML
+            ITable expectedTable = initialDataSet.getTable("usuarios");
 
-        conn.close();
-        } catch (Exception e){
-        fail("Error in findAll test: " + e.getMessage());
-        } 
+            //Se ejecuta
+            List<Usuario> result = service.findAllUsers();
+
+            //Verificar
+            assertNotNull(result);
+            //Se compara el tamaño
+            assertEquals(expectedTable.getRowCount(), result.size());
+            //Se compara la lista completa (elemento por elemento)
+            for(int i = 0; i < result.size(); i++){
+                assertEquals(expectedTable.getValue(i, "name"), result.get(i).getName());
+                assertEquals(expectedTable.getValue(i, "email"), result.get(i).getEmail());
+                assertEquals(expectedTable.getValue(i, "password"), result.get(i).getPassword());
+            }
+            conn.close();
+        }catch (Exception e){
+            fail("Error in findAll test: " + e.getMessage());
+        }
     }
-
 }

@@ -16,7 +16,7 @@ public class UserMysqlIDAO implements IDAOLogin {
         Connection con = null;
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            con = DriverManager.getConnection("jdbc:mysql://localhost:3307/calidad", "root", "123456");
+            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/calidad", "root", "123456");
         } catch (Exception e) {
             System.out.println("Error al obtener conexión: " + e);
         }
@@ -224,4 +224,3 @@ public class UserMysqlIDAO implements IDAOLogin {
         return result;
     }
 }
-

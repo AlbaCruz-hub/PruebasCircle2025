@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.calidad.login.service.LoginServiceTest
+-------------------------------------------------------------------------------
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.474 s -- in com.calidad.login.service.LoginServiceTest

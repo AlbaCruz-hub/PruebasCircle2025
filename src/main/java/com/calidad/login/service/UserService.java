@@ -14,19 +14,21 @@ public class UserService {
 	}
 	
 	public Usuario createUser(String name, String email, String password) {
-		Usuario user = null;
-		if (password.length() >= 8 && password.length() <=16) {
-			user = dao.findUsuarioByEmail(email);
-			
-			if (user == null) {
-				user = new Usuario(email, false, name, password);
-				int id = dao.save(user);
-				user.setId(id);
-			}
-		}
-		return user;
-	}
-	
+    if (password.length() >= 8 && password.length() <=16) {
+        Usuario user = dao.findUsuarioByEmail(email);
+        
+        if (user != null) {
+            return null; // Usuario ya existe
+        }
+        
+        user = new Usuario(email, false, name, password);
+        int id = dao.save(user);
+        user.setId(id);
+        return user;
+    }
+    return null;
+}
+
 	public List<Usuario> findAllUsers(){
 		List<Usuario> users = dao.findAll();
 		return users;
@@ -40,16 +42,16 @@ public class UserService {
 		return dao.findById(id);
 	}
     
-    public Usuario updateUser(Usuario user) {
-    	Usuario userOld = dao.findById(user.getId());
+ public Usuario updateUser(Usuario user) {
+    Usuario userOld = dao.findById(user.getId());
 
-		if (userOld != null){
-			userOld.setName(user.getName());
-			userOld.setPassword(user.getPassword());
-			return dao.updateUser(userOld);
-		}
-		 return null;
-	}
+    if (userOld != null){
+        userOld.setName(user.getName());
+        userOld.setPassword(user.getPassword());
+        return dao.updateUser(userOld);
+    }
+    return null;
+}
 
     public boolean deleteUser(int id) {
     	return dao.deleteById(id);

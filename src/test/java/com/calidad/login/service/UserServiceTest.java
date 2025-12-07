@@ -75,8 +75,28 @@ public class UserServiceTest {
         verify(dao, times(0)).save(any(Usuario.class));
         System.out.println("Test Password Corto fue exitoso");
     }
+    //3.Crear usuario existente
+    @Test
+    void crearUsuarioExistente(){
+    String email = "gabi@gmail.com";
+    String password = "Alba1234";
+    String nombre = "Gabriela";
 
-    //3. Eliminar usuario
+    //usuario ya existe
+    Usuario usuarioExistente = new Usuario("Gabriela", email, "Gabilu123");
+    when(dao.findUsuarioByEmail(email)).thenReturn(usuarioExistente);
+
+    // Ejecutar
+    Usuario result = userService.createUser(nombre, email, password);
+
+    // Verificar
+    assertThat(result, is(nullValue()));               
+    verify(dao, times(0)).save(any(Usuario.class));  
+
+    System.out.println("Test Crear Usuario Existente fue exitoso");
+}
+
+    //4. Eliminar usuario
     @Test
     void eliminarUsuario(){
         //SetUp
@@ -93,7 +113,7 @@ public class UserServiceTest {
         System.out.println("Test Eliminar usuario fue exitoso");
     }
 
-    //4. Actualizar usuario (password)
+    //5. Actualizar usuario (password)
     @Test
     void actualizarUsuario(){
         //SetUp
@@ -120,7 +140,7 @@ public class UserServiceTest {
 
     }
 
-    //5. Buscar por email
+    //6. Buscar por email
     @Test
     void buscarEmail(){
         //SetUp
@@ -137,23 +157,22 @@ public class UserServiceTest {
 
     }
 
-    //6. Buscar todos
-    @Test
-    void buscaTodos(){
-        //SetUp
-        List<Usuario> userlist = new ArrayList<>();
-        userlist.add(new Usuario("Deysi", "deysi@gmail.com", "Contra12345"));
-        userlist.add(new Usuario("Irving", "irving@gmail.com", "pechArmand"));
+    //7. Buscar todos
+   @Test
+void buscaTodos(){
+    // SetUp
+    List<Usuario> userlist = new ArrayList<>();
+    userlist.add(new Usuario("Deysi", "deysi@gmail.com", "Contra12345"));
+    userlist.add(new Usuario("Irving", "irving@gmail.com", "pechArmand"));
 
-        when(dao.findAll()).thenReturn(userlist);
+    when(dao.findAll()).thenReturn(userlist);
 
-        //Ejercicio
-        List<Usuario> result = userService.findAllUsers();
+    // Ejercicio
+    List<Usuario> result = userService.findAllUsers();
 
-        //Verificar
-        assertThat(result.size(), is(2));
-        System.out.println("Test buscar todos fue exitoso");
-
-    }
+    // Verificar
+    assertThat(result, is(userlist));
+    System.out.println("Test buscar todos fue exitoso");
+}
 
 }
