@@ -47,7 +47,8 @@ jobs:
           name: Ejecución Pruebas de Integración (DBUnit)
           command: mvn test -Dtest=**/*IntegrationTest
     #Step 6: Pruebas Funcionales
-      name: 6. Ejecutar Pruebas Funcionales (Selenium)
+       -run:
+      name: Ejecución  Pruebas Funcionales (Selenium)
           command: mvn test -Dtest=**/funcionales/**
 
 
