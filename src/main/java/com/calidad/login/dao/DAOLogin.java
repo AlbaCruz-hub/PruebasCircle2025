@@ -17,7 +17,7 @@ public class DAOLogin implements IDAOLogin {
         Connection con = null;
         try{
             Class.forName("com.mysql.cj.jdbc.Driver");
-            String dbURL = "jdbc:mysql://localhost:3306/calidad";
+            String dbURL = "jdbc:mysql://localhost:3307/calidad";
             String strUserID = "root";
             String strPassword = "123456";
             con = DriverManager.getConnection(dbURL, strUserID, strPassword);
