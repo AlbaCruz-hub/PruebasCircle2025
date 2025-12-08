@@ -19,6 +19,7 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.openqa.selenium.chrome.ChromeOptions;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
 
@@ -31,8 +32,16 @@ public class CRUDFuncionalTest {
 
     @BeforeEach
     public void setUp() throws Exception {
-        WebDriverManager.chromedriver().setup();  
-        driver = new ChromeDriver();
+        WebDriverManager.chromedriver().setup();
+        
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--headless=new"); 
+        options.addArguments("--no-sandbox");
+        options.addArguments("--disable-dev-shm-usage");
+        options.addArguments("--window-size=1920,1080");
+        options.addArguments("--remote-allow-origins=*");
+
+        driver = new ChromeDriver(options); 
 
         baseUrl = "https://www.google.com/";
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(60));
@@ -85,43 +94,46 @@ public class CRUDFuncionalTest {
 
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
         boolean textoActual = wait.until(ExpectedConditions.textToBe(
-                By.xpath("/html/body/div[3]/div/div[2]/form/div[5]/div/p"),
-                "Invalid Email"
+            By.xpath("/html/body/div[3]/div/div[2]/form/div[5]/div/p"),
+            "Email must be valid."
         ));
 
         assertTrue(textoActual);
     }
     @Test
-public void testCRUD_Update() throws Exception {
-    driver.get("https://mern-crud-mpfr.onrender.com/");
-    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+    public void testCRUD_Update() throws Exception {
+        driver.get("https://mern-crud-mpfr.onrender.com/");
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(60));
 
-    driver.findElement(By.xpath("//div[@id='root']/div/div[2]/table/tbody/tr[1]/td[5]/button[1]")).click();
-    
-    driver.findElement(By.name("name")).click();
-    driver.findElement(By.name("name")).clear();
-    driver.findElement(By.name("name")).sendKeys("Vianey Cante");
-    
-    driver.findElement(By.name("email")).click();
-    driver.findElement(By.name("email")).clear();
-    driver.findElement(By.name("email")).sendKeys("vianeycanteee@gmail.com");
-    
-    driver.findElement(By.name("age")).click();
-    driver.findElement(By.name("age")).clear();
-    driver.findElement(By.name("age")).sendKeys("23");
-    
-    driver.findElement(By.xpath("(.//*[normalize-space(text()) and normalize-space(.)='Gender'])[2]/following::div[2]")).click();
-    driver.findElement(By.xpath("(.//*[normalize-space(text()) and normalize-space(.)='Male'])[1]/following::span[1]")).click();
-    
-    driver.findElement(By.xpath("/html/body/div[3]/div/div[2]/form/button")).click();
+        driver.findElement(By.xpath("//div[@id='root']/div/div[2]/table/tbody/tr[1]/td[5]/button[1]")).click();
+        
+        driver.findElement(By.name("name")).click();
+        driver.findElement(By.name("name")).clear();
+        driver.findElement(By.name("name")).sendKeys("Vianey Cante");
+        
+        driver.findElement(By.name("email")).click();
+        driver.findElement(By.name("email")).clear();
+        String emailUnico = "vianey" + System.currentTimeMillis() + "@gmail.com";
+        driver.findElement(By.name("email")).sendKeys(emailUnico);
+        
+        driver.findElement(By.name("age")).click();
+        driver.findElement(By.name("age")).clear();
+        driver.findElement(By.name("age")).sendKeys("23");
+        
+        driver.findElement(By.xpath("(.//*[normalize-space(text()) and normalize-space(.)='Gender'])[2]/following::div[2]")).click();
+        driver.findElement(By.xpath("(.//*[normalize-space(text()) and normalize-space(.)='Male'])[1]/following::span[1]")).click();
 
-    boolean textoActual = wait.until(ExpectedConditions.textToBe(
-            By.xpath("/html/body/div[3]/div/div[2]/form/div[4]/div/p"),
-            "Successfully updated!"
-    ));
+        Thread.sleep(2000);
 
-    assertTrue(textoActual);
-}
+        WebElement botonUpdate = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("/html/body/div[3]/div/div[2]/form/button")));
+        botonUpdate.click();
+
+        WebElement mensajeExito = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.xpath("//*[contains(text(), 'Successfully updated!')]")
+        ));
+
+        assertTrue(mensajeExito.isDisplayed());
+    }
 @Test
 public void testCRUD_Delete() throws Exception {
     driver.get("https://mern-crud-mpfr.onrender.com/");

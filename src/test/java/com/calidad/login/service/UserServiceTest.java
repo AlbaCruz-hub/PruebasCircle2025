@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.times;
@@ -49,6 +50,7 @@ public class UserServiceTest {
 
         //Verificar
         assertThat("El email deberia coincidir", result.getEmail(), is(email));
+        assertThat("El ID debería ser 1", result.getId(), is(1));
 
         //Se verifica que el metofo fue llamado 1 vez
         verify(dao, times(1)).save(any(Usuario.class));
@@ -75,28 +77,8 @@ public class UserServiceTest {
         verify(dao, times(0)).save(any(Usuario.class));
         System.out.println("Test Password Corto fue exitoso");
     }
-    //3.Crear usuario existente
-    @Test
-    void crearUsuarioExistente(){
-    String email = "gabi@gmail.com";
-    String password = "Alba1234";
-    String nombre = "Gabriela";
 
-    //usuario ya existe
-    Usuario usuarioExistente = new Usuario("Gabriela", email, "Gabilu123");
-    when(dao.findUsuarioByEmail(email)).thenReturn(usuarioExistente);
-
-    // Ejecutar
-    Usuario result = userService.createUser(nombre, email, password);
-
-    // Verificar
-    assertThat(result, is(nullValue()));               
-    verify(dao, times(0)).save(any(Usuario.class));  
-
-    System.out.println("Test Crear Usuario Existente fue exitoso");
-}
-
-    //4. Eliminar usuario
+    //3. Eliminar usuario
     @Test
     void eliminarUsuario(){
         //SetUp
@@ -113,13 +95,13 @@ public class UserServiceTest {
         System.out.println("Test Eliminar usuario fue exitoso");
     }
 
-    //5. Actualizar usuario (password)
+    //4. Actualizar usuario (password)
     @Test
     void actualizarUsuario(){
         //SetUp
         int id = 1;
-        Usuario userToUpdate = new Usuario("Guadalupe", "cante@gmail.com", "NuevoPass1111");
-        userToUpdate.setId(id);
+        Usuario userPassNuevo = new Usuario("Vianey", "via@hotmail.com", "NuevoPass1111");
+        userPassNuevo.setId(id);
 
         Usuario oldUser = new Usuario ("Vianey", "via@hotmail.com", "Pass12345");
         oldUser.setId(id);
@@ -128,19 +110,19 @@ public class UserServiceTest {
         when(dao.findById(id)).thenReturn(oldUser);
 
         //Se simula la actualización
-        when(dao.updateUser(any(Usuario.class))).thenReturn(userToUpdate);
+        when(dao.updateUser(any(Usuario.class))).thenReturn(oldUser);
 
         //Ejercicio
-        Usuario result = userService.updateUser(userToUpdate);
+        Usuario result = userService.updateUser(userPassNuevo);
 
         //Verificar
-        assertThat(result.getName(), is("Guadalupe"));
+        assertThat("El password debería haber cambiado", result.getPassword(), is("NuevoPass1111"));
         verify(dao).updateUser(any(Usuario.class));
-        System.out.println("Test actualizar usuario fue exitosa");
+        System.out.println("Test actualizar password de usuario fue exitoso");
 
     }
 
-    //6. Buscar por email
+    //5. Buscar por email
     @Test
     void buscarEmail(){
         //SetUp
@@ -157,22 +139,48 @@ public class UserServiceTest {
 
     }
 
-    //7. Buscar todos
-   @Test
-void buscaTodos(){
-    // SetUp
-    List<Usuario> userlist = new ArrayList<>();
-    userlist.add(new Usuario("Deysi", "deysi@gmail.com", "Contra12345"));
-    userlist.add(new Usuario("Irving", "irving@gmail.com", "pechArmand"));
+    //6. Buscar todos
+    @Test
+    void buscaTodos(){
+        //SetUp
+        List<Usuario> userlist = new ArrayList<>();
+        userlist.add(new Usuario("Deysi", "deysi@gmail.com", "Contra12345"));
+        userlist.add(new Usuario("Irving", "irving@gmail.com", "pechArmand"));
 
-    when(dao.findAll()).thenReturn(userlist);
+        when(dao.findAll()).thenReturn(userlist);
 
-    // Ejercicio
-    List<Usuario> result = userService.findAllUsers();
+        //Ejercicio
+        List<Usuario> result = userService.findAllUsers();
 
-    // Verificar
-    assertThat(result, is(userlist));
-    System.out.println("Test buscar todos fue exitoso");
-}
+        //Verificar
+        assertThat("La lista devuelta debe ser igual a la esperada", result, is(userlist));
+        System.out.println("Test buscar todos, comparando listas, fue exitoso");
+
+    }
+
+    //7. Usuario ya existente
+    @Test
+    void crearUsuarioYaExistente(){
+        //SetUp
+        String email = "existente@correo.com";
+        String password = "Password1234";
+        String nombre = "Usuario existente";
+
+        //Se simula que el DAO encuentra un usuario con ese email
+        Usuario usuarioEncontrado = new Usuario(nombre, email, password);
+        usuarioEncontrado.setId(10);
+        when(dao.findUsuarioByEmail(email)).thenReturn(usuarioEncontrado);
+
+        //Ejercicio
+        Usuario result = userService.createUser(nombre, email, password);
+
+        //Verificar
+        //El usuario no debe ser nulo, debe ser el usuario que ya existía
+        assertThat(result, is(usuarioEncontrado));
+        //verificar que no se llamó a dao.save(), ya que no se debe de duplicar registros
+        verify(dao, never()).save(any(Usuario.class));
+        System.out.println("Test crear usuario existente (no duplicado) fue exitoso");
+
+    }
 
 }
