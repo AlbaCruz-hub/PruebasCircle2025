@@ -33,17 +33,23 @@ public class CRUDFuncionalTest {
     @BeforeEach
     public void setUp() throws Exception {
         WebDriverManager.chromedriver().setup();
-
         ChromeOptions options = new ChromeOptions();
+
+        // Opciones para CircleCI
         options.addArguments("--headless=new"); 
         options.addArguments("--no-sandbox");
         options.addArguments("--disable-dev-shm-usage");
         options.addArguments("--window-size=1920,1080");
         options.addArguments("--remote-allow-origins=*");
 
+        // User-Agent para evitar bloqueos 
+        options.addArguments("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"); 
+        options.addArguments("--ignore-certificate-errors");
+
         driver = new ChromeDriver(options);
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(60));
         js = (JavascriptExecutor) driver;
+        driver.manage().window().maximize(); 
     }
 
     @Test
