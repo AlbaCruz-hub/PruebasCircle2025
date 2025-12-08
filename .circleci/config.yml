@@ -12,7 +12,7 @@ jobs:
     docker:
       # Specify the version you desire here
       # See: https://circleci.com/developer/images/image/cimg/openjdk
-      #Imagen 1 para compilar el proyecto Maven
+      # Imagen 1 para compilar el proyecto Maven
       - image: cimg/openjdk:21.0-browsers
         environment:
           MAVEN_OPTS: "-Xmx3200m"
@@ -21,22 +21,24 @@ jobs:
     # See: https://circleci.com/docs/guides/orchestrate/jobs-steps/#steps-overview & https://circleci.com/docs/reference/configuration-reference/#steps
     steps:
       # Checkout the code as the first step.
-      #Prueba inicial
+      # Prueba inicial
       - checkout
       - run:
           name: Prueba Inicial
           command: "echo Iniciando pipeline completo"
 
-       # Job para compilar el proyecto Maven
+      # Job para compilar el proyecto Maven
       - run:
           name: Compilar proyecto
           command: mvn -B -DskipTests clean package
-          # Orchestrate jobs using workflows
-    # See: https://circleci.com/docs/guides/orchestrate/workflows/ & https://circleci.com/docs/reference/configuration-reference/#workflows
-    workflows:
-     version: 2
-    sample: # This is the name of the workflow, feel free to change it to better match your workflow.
+
+# Orchestrate jobs using workflows
+# See: https://circleci.com/docs/guides/orchestrate/workflows/ & https://circleci.com/docs/reference/configuration-reference/#workflows
+workflows:
+  version: 2
+  sample:  # This is the name of the workflow, feel free to change it to better match your workflow.
     # Inside the workflow, you define the jobs you want to run.
     jobs:
       - build-and-test
+
       
