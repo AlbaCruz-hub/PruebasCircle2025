@@ -24,177 +24,195 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import io.github.bonigarcia.wdm.WebDriverManager;
 
 public class CRUDFuncionalTest {
+  	private WebDriver driver;
+    private String baseUrl;
+    private boolean acceptNextAlert = true;
+    private StringBuffer verificationErrors = new StringBuffer();
+    JavascriptExecutor js;
 
-    private WebDriver driver;
-    private boolean acceptNextAlert = true;
-    private StringBuffer verificationErrors = new StringBuffer();
-    private JavascriptExecutor js;
+    @BeforeEach
+    public void setUp() throws Exception {
+        WebDriverManager.chromedriver().setup();
+        
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--headless=new"); 
+        options.addArguments("--no-sandbox");
+        options.addArguments("--disable-dev-shm-usage");
+        options.addArguments("--window-size=1920,1080");
+        options.addArguments("--remote-allow-origins=*");
 
-    @BeforeEach
-    public void setUp() throws Exception {
-        WebDriverManager.chromedriver().setup();
+        driver = new ChromeDriver(options); 
 
-        ChromeOptions options = new ChromeOptions();
-        options.addArguments("--headless=new");
-        options.addArguments("--no-sandbox");
-        options.addArguments("--disable-dev-shm-usage");
-        options.addArguments("--window-size=1920,1080");
-        options.addArguments("--remote-allow-origins=*");
+        baseUrl = "https://www.google.com/";
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(60));
+        js = (JavascriptExecutor) driver;
+    }
 
-        driver = new ChromeDriver(options);
-        // Se mantiene el implicit wait en 10s, los waits explícitos controlan la sincronización.
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10)); 
-        js = (JavascriptExecutor) driver;
-    }
+      @Test
+    public void testCRUD_Create() throws Exception {
+        driver.get("https://mern-crud-mpfr.onrender.com/");
+        driver.findElement(By.xpath("//div[@id='root']/div/div[2]/button")).click();
+        driver.findElement(By.name("name")).click();
+        driver.findElement(By.name("name")).clear();
+        driver.findElement(By.name("name")).sendKeys("Vianey Cante Cab");
+        driver.findElement(By.name("email")).click();
+        driver.findElement(By.name("email")).clear();
+        driver.findElement(By.name("email")).sendKeys("vianeycita1908@gmail.com.com");
+        driver.findElement(By.name("age")).click();
+        driver.findElement(By.name("age")).clear();
+        driver.findElement(By.name("age")).sendKeys("22");
+        driver.findElement(By.xpath("(.//*[normalize-space(text()) and normalize-space(.)='Gender'])[2]/following::div[2]")).click();
+        driver.findElement(By.xpath("(.//*[normalize-space(text()) and normalize-space(.)='Male'])[2]/following::span[1]")).click();
+        driver.findElement(By.xpath("(.//*[normalize-space(text()) and normalize-space(.)='Woah!'])[1]/following::button[1]")).click();
 
-    @Test
-    public void testCRUD_Create() throws Exception {
-        driver.get("https://mern-crud-mpfr.onrender.com/");
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
+        boolean textoActual = wait.until(ExpectedConditions.textToBe(
+                By.xpath("/html/body/div[3]/div/div[2]/form/div[4]/div/p"),
+                "Successfully added!"
+        ));
 
-        driver.findElement(By.xpath("//div[@id='root']/div/div[2]/button")).click();
-        driver.findElement(By.name("name")).clear();
-        driver.findElement(By.name("name")).sendKeys("Vianey Cante Cab");
-        driver.findElement(By.name("email")).clear();
-        driver.findElement(By.name("email")).sendKeys("vianeycita1908@gmail.com");
-        driver.findElement(By.name("age")).clear();
-        driver.findElement(By.name("age")).sendKeys("22");
-        driver.findElement(By.xpath("(.//*[normalize-space(text()) and normalize-space(.)='Gender'])[2]/following::div[2]")).click();
-        driver.findElement(By.xpath("(.//*[normalize-space(text()) and normalize-space(.)='Male'])[2]/following::span[1]")).click();
-        driver.findElement(By.xpath("(.//*[normalize-space(text()) and normalize-space(.)='Woah!'])[1]/following::button[1]")).click();
+        assertTrue(textoActual);
+    }
 
-        // CORRECCIÓN: Aumentar el tiempo de espera a 30 segundos
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));
-        WebElement mensajeExito = wait.until(ExpectedConditions.visibilityOfElementLocated(
-                By.xpath("//*[contains(text(),'Successfully added!')]")
-        ));
 
-        assertTrue(mensajeExito.isDisplayed());
-    }
+    @Test
+    public void testCRUD_EmailError() throws Exception {
+        driver.get("https://mern-crud-mpfr.onrender.com/");
+        driver.findElement(By.xpath("//div[@id='root']/div/div[2]/button")).click();
+        driver.findElement(By.name("name")).click();
+        driver.findElement(By.name("name")).clear();
+        driver.findElement(By.name("name")).sendKeys("Vianey Cante Cab");
+        driver.findElement(By.name("email")).click();
+        driver.findElement(By.name("email")).clear();
+        driver.findElement(By.name("email")).sendKeys("vianeyyy@correo");
+        driver.findElement(By.name("age")).click();
+        driver.findElement(By.name("age")).clear();
+        driver.findElement(By.name("age")).sendKeys("22");
+        driver.findElement(By.xpath("(.//*[normalize-space(text()) and normalize-space(.)='Gender'])[2]/following::div[2]")).click();
+        driver.findElement(By.xpath("(.//*[normalize-space(text()) and normalize-space(.)='Male'])[2]/following::span[1]")).click();
+        driver.findElement(By.xpath("(.//*[normalize-space(text()) and normalize-space(.)='Woah!'])[1]/following::button[1]")).click();
 
-    @Test
-    public void testCRUD_EmailError() throws Exception {
-        driver.get("https://mern-crud-mpfr.onrender.com/");
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
+        boolean textoActual = wait.until(ExpectedConditions.textToBe(
+            By.xpath("/html/body/div[3]/div/div[2]/form/div[5]/div/p"),
+            "Email must be valid."
+        ));
 
-        driver.findElement(By.xpath("//div[@id='root']/div/div[2]/button")).click();
-        driver.findElement(By.name("name")).clear();
-        driver.findElement(By.name("name")).sendKeys("Vianey Cante Cab");
-        driver.findElement(By.name("email")).clear();
-        driver.findElement(By.name("email")).sendKeys("vianeyyy@correo");
-        driver.findElement(By.name("age")).clear();
-        driver.findElement(By.name("age")).sendKeys("22");
-        driver.findElement(By.xpath("(.//*[normalize-space(text()) and normalize-space(.)='Gender'])[2]/following::div[2]")).click();
-        driver.findElement(By.xpath("(.//*[normalize-space(text()) and normalize-space(.)='Male'])[2]/following::span[1]")).click();
-        driver.findElement(By.xpath("(.//*[normalize-space(text()) and normalize-space(.)='Woah!'])[1]/following::button[1]")).click();
+        assertTrue(textoActual);
+    }
+    @Test
+    public void testCRUD_Update() throws Exception {
+        driver.get("https://mern-crud-mpfr.onrender.com/");
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(60));
 
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
-        WebElement mensajeError = wait.until(ExpectedConditions.visibilityOfElementLocated(
-                By.xpath("//*[contains(text(),'Email must be valid.')]")
-        ));
+        driver.findElement(By.xpath("//div[@id='root']/div/div[2]/table/tbody/tr[1]/td[5]/button[1]")).click();
+        
+        driver.findElement(By.name("name")).click();
+        driver.findElement(By.name("name")).clear();
+        driver.findElement(By.name("name")).sendKeys("Vianey Cante");
+        
+        driver.findElement(By.name("email")).click();
+        driver.findElement(By.name("email")).clear();
+        String emailUnico = "vianey" + System.currentTimeMillis() + "@gmail.com";
+        driver.findElement(By.name("email")).sendKeys(emailUnico);
+        
+        driver.findElement(By.name("age")).click();
+        driver.findElement(By.name("age")).clear();
+        driver.findElement(By.name("age")).sendKeys("23");
+        
+        driver.findElement(By.xpath("(.//*[normalize-space(text()) and normalize-space(.)='Gender'])[2]/following::div[2]")).click();
+        driver.findElement(By.xpath("(.//*[normalize-space(text()) and normalize-space(.)='Male'])[1]/following::span[1]")).click();
 
-        assertTrue(mensajeError.isDisplayed());
-    }
+        Thread.sleep(2000);
 
-    @Test
-    public void testCRUD_Update() throws Exception {
-        driver.get("https://mern-crud-mpfr.onrender.com/");
-        // CORRECCIÓN: Aumentar el tiempo de espera a 45 segundos para ser más robusto
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(45));
+        WebElement botonUpdate = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("/html/body/div[3]/div/div[2]/form/button")));
+        botonUpdate.click();
 
-        driver.findElement(By.xpath("//table/tbody/tr[1]/td[5]/button[1]")).click();
+        WebElement mensajeExito = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.xpath("//*[contains(text(), 'Successfully updated!')]")
+        ));
 
-        driver.findElement(By.name("name")).clear();
-        driver.findElement(By.name("name")).sendKeys("Vianey Cante");
-        String emailUnico = "vianey" + System.currentTimeMillis() + "@gmail.com";
-        driver.findElement(By.name("email")).clear();
-        driver.findElement(By.name("email")).sendKeys(emailUnico);
-        driver.findElement(By.name("age")).clear();
-        driver.findElement(By.name("age")).sendKeys("23");
+        assertTrue(mensajeExito.isDisplayed());
+    }
+@Test
+public void testCRUD_Delete() throws Exception {
+    driver.get("https://mern-crud-mpfr.onrender.com/");
+    WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));
+    
+    String idAEliminar = driver.findElement(
+                By.xpath("/html/body/div[2]/div/div[2]/table/tbody/tr[1]/td[1]")
+    ).getText();
+    
+    int filasInicial = driver.findElements(
+                By.xpath("/html/body/div[2]/div/div[2]/table/tbody/tr")
+    ).size();
+    
+    driver.findElement(
+                By.xpath("/html/body/div[2]/div/div[2]/table/tbody/tr[1]/td[5]/button[2]")
+    ).click();
+    
+    driver.findElement(
+                By.xpath("/html/body/div[3]/div/div[3]/button[1]")
+    ).click();
+    
+    wait.until(driver -> {
+        int filaActual = driver.findElements(
+                        By.xpath("/html/body/div[2]/div/div[2]/table/tbody/tr")
+        ).size();
+        return filaActual == filasInicial - 1;
+    });
+    
+    Thread.sleep(30000); 
+    
+    List<WebElement> ids = driver.findElements(
+                By.xpath("/html/body/div[2]/div/div[2]/table/tbody/tr/td[1]")
+    );
+    
+    boolean idEliminado = ids.stream()
+                .noneMatch(elemento -> elemento.getText().equals(idAEliminar));
+                
+    assertTrue(idEliminado, "El registro no fue eliminado correctamente.");
+}
+  
+     @AfterEach
+    public void tearDown() throws Exception {
+        driver.quit();
+        String verificationErrorString = verificationErrors.toString();
+        if (!"".equals(verificationErrorString)) {
+            fail(verificationErrorString);
+        }
+    }
 
-        driver.findElement(By.xpath("(.//*[normalize-space(text()) and normalize-space(.)='Gender'])[2]/following::div[2]")).click();
-        driver.findElement(By.xpath("(.//*[normalize-space(text()) and normalize-space(.)='Male'])[1]/following::span[1]")).click();
+    private boolean isElementPresent(By by) {
+        try {
+            driver.findElement(by);
+            return true;
+        } catch (NoSuchElementException e) {
+            return false;
+        }
+    }
 
-        // Uso de la espera larga (45s) para el botón
-        WebElement botonUpdate = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("//form//button[contains(text(),'Update')]")));
-        botonUpdate.click();
+    private boolean isAlertPresent() {
+        try {
+            driver.switchTo().alert();
+            return true;
+        } catch (NoAlertPresentException e) {
+            return false;
+        }
+    }
 
-        // Uso de la espera larga (45s) para el mensaje de éxito
-        WebElement mensajeExito = wait.until(ExpectedConditions.visibilityOfElementLocated(
-                By.xpath("//*[contains(text(),'Successfully updated!')]")
-        ));
-
-        assertTrue(mensajeExito.isDisplayed());
-    }
-
-    @Test
-    public void testCRUD_Delete() throws Exception {
-        driver.get("https://mern-crud-mpfr.onrender.com/");
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));
-
-        // Obtener ID de la primera fila
-        String idAEliminar = driver.findElement(By.xpath("//table/tbody/tr[1]/td[1]")).getText();
-
-        // Hacer click en botón de delete
-        driver.findElement(By.xpath("//table/tbody/tr[1]/td[5]/button[2]")).click();
-
-        // CORRECCIÓN: Esperar a que el modal aparezca antes de intentar hacer clic en el botón (resuelve NoSuchElementException)
-        By modalFooter = By.xpath("//div[contains(@class,'modal-footer')]");
-        wait.until(ExpectedConditions.visibilityOfElementLocated(modalFooter));
-        
-        // Confirmar modal de eliminación
-        driver.findElement(By.xpath("//div[contains(@class,'modal-footer')]/button[1]")).click();
-
-        // Esperar hasta que la fila desaparezca
-        wait.until(d -> driver.findElements(By.xpath("//table/tbody/tr/td[1]"))
-                .stream().noneMatch(el -> el.getText().equals(idAEliminar)));
-
-        // Verificación final
-        List<WebElement> ids = driver.findElements(By.xpath("//table/tbody/tr/td[1]"));
-        boolean idEliminado = ids.stream().noneMatch(el -> el.getText().equals(idAEliminar));
-        assertTrue(idEliminado, "El registro no fue eliminado correctamente.");
-    }
-
-    @AfterEach
-    public void tearDown() throws Exception {
-        if (driver != null) {
-            driver.quit();
-        }
-        String verificationErrorString = verificationErrors.toString();
-        if (!verificationErrorString.isEmpty()) {
-            fail(verificationErrorString);
-        }
-    }
-
-    // ==================== MÉTODOS AUXILIARES ====================
-    private boolean isElementPresent(By by) {
-        try {
-            driver.findElement(by);
-            return true;
-        } catch (NoSuchElementException e) {
-            return false;
-        }
-    }
-
-    private boolean isAlertPresent() {
-        try {
-            driver.switchTo().alert();
-            return true;
-        } catch (NoAlertPresentException e) {
-            return false;
-        }
-    }
-
-    private String closeAlertAndGetItsText() {
-        try {
-            Alert alert = driver.switchTo().alert();
-            String alertText = alert.getText();
-            if (acceptNextAlert) {
-                alert.accept();
-            } else {
-                alert.dismiss();
-            }
-            return alertText;
-        } finally {
-            acceptNextAlert = true;
-        }
-    }
+    private String closeAlertAndGetItsText() {
+        try {
+            Alert alert = driver.switchTo().alert();
+            String alertText = alert.getText();
+            if (acceptNextAlert) {
+                alert.accept();
+            } else {
+                alert.dismiss();
+            }
+            return alertText;
+        } finally {
+            acceptNextAlert = true;
+        }
+    }
 }

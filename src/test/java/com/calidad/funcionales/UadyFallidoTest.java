@@ -1,4 +1,3 @@
-
 package com.calidad.funcionales;
 
 import java.util.regex.Pattern;
