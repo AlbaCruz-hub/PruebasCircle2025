@@ -1,29 +1,60 @@
-# CircleCI 2.1 - Job para compilar proyecto Java
+# CircleCI 2.1 - Pipeline con workflow para compilar y ejecutar pruebas del proyecto Java
 version: 2.1
 
 jobs:
   build-and-test:
     docker:
-      # Imagen para compilar el proyecto Maven con Java y navegadores
-      - image: cimg/openjdk:21.0-browsers  
+      # Imagen 1: Java 21 con Maven
+      - image: cimg/openjdk:21.0-browsers
+        environment:
+          MAVEN_OPTS: "-Xmx3200m"
+      # Imagen 2: MySQL 8 para pruebas de integración DBUnit
+      - image: cimg/mysql:8.0
+        environment:
+          MYSQL_DATABASE: calidad
+          MYSQL_ROOT_PASSWORD: 123456
+          MYSQL_ROOT_HOST: "%"
+          MYSQL_TCP_PORT: 3306
 
     steps:
-      - checkout  # Clonar repositorio
+      # Clonar el repositorio
+      - checkout
 
-      # Inicio de pipeline
+      # Inicio del pipeline
       - run:
-          name: Inicio
-          command: "echo Iniciando pipeline"
+          name: Inicio del pipeline
+          command: "echo Iniciando pipeline completo: clonar repo y preparar entorno"
 
-      # Compilación del proyecto Maven sin ejecutar tests
+      # Esperar a que MySQL esté listo
       - run:
-          name: Compilar Maven
+          name: Esperar a MySQL
+          command: dockerize -wait tcp://localhost:3306 -timeout 1m
+
+      # Compilar el proyecto sin ejecutar pruebas
+      - run:
+          name: Compilar proyecto
           command: mvn -B -DskipTests clean package
 
+      # STEP 1: Pruebas unitarias Calculadora
+      - run:
+          name: Pruebas Unitarias - Calculadora
+          command: mvn test -Dtest=CalculadoraTest
+
+      # STEP 2: Pruebas unitarias otros servicios con Mockito
+      - run:
+          name: Pruebas Unitarias - Mockito y Otros Servicios
+          command: mvn test -Dtest=!CalculadoraTest,!**/*IntegrationTest,!**/funcionales/**
+
+      # STEP 3: Pruebas de integración con DBUnit
+      - run:
+          name: Pruebas de Integración - DBUnit
+          command: mvn test -Dtest=**/*IntegrationTest
+
+  
+
+# Workflow que ejecuta el job
 workflows:
   version: 2
-  sample:
+  build-and-test-workflow:
     jobs:
-
-
-      
+      - build-and-test
