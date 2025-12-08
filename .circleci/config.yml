@@ -25,7 +25,7 @@ jobs:
       - checkout
       - run:
           name: Prueba Inicial
-          command: "echo Iniciando pipeline completo
+          command: "echo Iniciando pipeline completo"
 
        # Job para compilar el proyecto Maven
       - run:
