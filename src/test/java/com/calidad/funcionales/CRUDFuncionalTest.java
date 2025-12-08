@@ -41,7 +41,7 @@ public class CRUDFuncionalTest {
         options.addArguments("--ignore-certificate-errors");
 
         driver = new ChromeDriver(options);
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(60)); g
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(60)); 
         js = (JavascriptExecutor) driver;
     }
 
