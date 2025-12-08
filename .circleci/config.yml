@@ -1,13 +1,22 @@
+# Use the latest 2.1 version of CircleCI pipeline process engine.
+# See: https://circleci.com/docs/reference/configuration-reference
 version: 2.1
 
+# Define a job to be invoked later in a workflow.
+# See: https://circleci.com/docs/guides/orchestrate/jobs-steps/#jobs-overview & https://circleci.com/docs/reference/configuration-reference/#jobs
 jobs:
+  # Below is the definition of your job to build and test your app, you can rename and customize it as you want.
   build-and-test:
+    # Specify the execution environment. You can specify an image from Docker Hub or use one of our convenience images from CircleCI's Developer Hub.
+    # See: https://circleci.com/docs/guides/execution-managed/executor-intro/ & https://circleci.com/docs/reference/configuration-reference/#executor-job
     docker:
-      # IMAGEN 1: OpenJDK + Browsers (para Maven y Selenium)
+      # Specify the version you desire here
+      # See: https://circleci.com/developer/images/image/cimg/openjdk
       - image: cimg/openjdk:21.0-browsers
         environment:
           MAVEN_OPTS: "-Xmx3200m"
-      # IMAGEN 2: MySQL 8.0 (para pruebas de integración DBUnit)
+      # 2. IMAGEN SECUNDARIA: MySQL 8.0 (Para tus pruebas de integración DBUnit)
+      # CircleCI levanta esto en el puerto 3306 (recuerda ajustar tu código Java).
       - image: cimg/mysql:8.0
         environment:
           MYSQL_DATABASE: calidad
@@ -15,57 +24,65 @@ jobs:
           MYSQL_ROOT_HOST: "%"
           MYSQL_TCP_PORT: 3306
 
+
+    # Add steps to the job
+    # See: https://circleci.com/docs/guides/orchestrate/jobs-steps/#steps-overview & https://circleci.com/docs/reference/configuration-reference/#steps
     steps:
-      # Step 0: Clonar el repositorio
+      # Checkout the code as the first step.
       - checkout
       - run:
-          name: Inicio del pipeline
-          command: echo "Iniciando pipeline completo"
+          name: Iniciando
+          command: "echo Iniciando pipeline completo"
 
-      # Step 1: Inicializar MySQL
+      # Paso importante: Esperar a que la Base de Datos arranque antes de continuar
       - run:
-          name: Inicializar MySQL
-          command: |
-            echo "Esperando a que MySQL esté disponible..."
-            dockerize -wait tcp://localhost:3306 -timeout 120s
-            echo "Creando usuario de test..."
-            mysql -u root -p123456 -e "CREATE USER IF NOT EXISTS 'testuser'@'%' IDENTIFIED BY 'test1234';"
-            mysql -u root -p123456 -e "GRANT ALL PRIVILEGES ON calidad.* TO 'testuser'@'%';"
-            mysql -u root -p123456 -e "FLUSH PRIVILEGES;"
+          name: Esperar a MySQL
+          command: dockerize -wait tcp://localhost:3306 -timeout 1m
 
-      # Step 2: Build del proyecto
+      # Use mvn clean and package as the standard maven build phase
       - run:
-          name: Compilar proyecto Maven
+          name: Build
           command: mvn -B -DskipTests clean package
+      # Then run your tests!
 
-      # Step 3: Ejecución CalculadoraTest (Unitarias)
+      #STEP 1: PRUEBAS UNITARIAS
+      #SE EJECUTA CALCULADORATEST
       - run:
-          name: Ejecución CalculadoraTest (Unitarias)
+          name: 1. Unitarias - CalculadoraTest
           command: mvn test -Dtest=CalculadoraTest
-
-      # Step 4: Ejecución pruebas unitarias restantes
+      
+      #STEP 2: PRUEBAS UNITARIAS
+      #SE EJECUTAN LAS DEMAS PRUEBAS UNITARIAS
       - run:
-          name: Ejecución pruebas unitarias (otros servicios)
+          name: 2 Unitarias - Otros Servicios
           command: mvn test -Dtest=!CalculadoraTest,!**/*IntegrationTest,!**/funcionales/**
 
-      # Step 5: Ejecución Pruebas de Integración (DBUnit)
+
+      # STEP 3: PRUEBAS DE INTEGRACIÓN
+      # Aquí se ejecuta UserServiceIntegrationTest (DBUnit)
       - run:
           name: 3. Ejecutar Pruebas de Integración (DBUnit)
           command: mvn test -Dtest=**/*IntegrationTest
 
-      # Step 6: Pruebas Funcionales (Selenium)
+      # STEP 4: PRUEBAS FUNCIONALES
+      # Aquí se ejecutan CRUDFuncionalTest y UadyFallidoTest (Selenium)
       - run:
           name: 4. Ejecutar Pruebas Funcionales (Selenium)
           command: mvn test -Dtest=**/funcionales/**
 
-      # Step 7: Guardar reportes para Test Insights y Badge
+      # TEST INSIGHTS (Requisito de la maestra)
+      # Sube los reportes para generar las gráficas y el Badge
       - store_test_results:
           path: target/surefire-reports
+
       - store_artifacts:
           path: target/surefire-reports
 
+# Orchestrate jobs using workflows
+# See: https://circleci.com/docs/guides/orchestrate/workflows/ & https://circleci.com/docs/reference/configuration-reference/#workflows
 workflows:
   version: 2
-  build-and-test-workflow:
+  sample: # This is the name of the workflow, feel free to change it to better match your workflow.
+    # Inside the workflow, you define the jobs you want to run.
     jobs:
       - build-and-test
