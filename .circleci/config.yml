@@ -3,25 +3,35 @@ version: 2.1
 jobs:
   build-and-test:
     docker:
+      # IMAGEN 1: OpenJDK + Browsers (para Maven y Selenium)
       - image: cimg/openjdk:21.0-browsers
         environment:
           MAVEN_OPTS: "-Xmx3200m"
-    steps:
-      # Step 0: Instalar MySQL en el contenedor principal
-      - run:
-          name: Instalar MySQL
-          command: |
-            sudo apt-get update
-            sudo apt-get install -y mysql-server
-            sudo service mysql start
-            echo "Esperando a que MySQL esté disponible..."
-            dockerize -wait tcp://127.0.0.1:3306 -timeout 120s
+      # IMAGEN 2: MySQL 8.0 (para pruebas de integración DBUnit)
+      - image: cimg/mysql:8.0
+        environment:
+          MYSQL_DATABASE: calidad
+          MYSQL_ROOT_PASSWORD: 123456
+          MYSQL_ROOT_HOST: "%"
+          MYSQL_TCP_PORT: 3306
 
-      # Step 1: Clonar repositorio
+    steps:
+      # Step 0: Clonar el repositorio
       - checkout
       - run:
           name: Inicio del pipeline
           command: echo "Iniciando pipeline completo"
+
+      # Step 1: Inicializar MySQL
+      - run:
+          name: Inicializar MySQL
+          command: |
+            echo "Esperando a que MySQL esté disponible..."
+            dockerize -wait tcp://localhost:3306 -timeout 120s
+            echo "Creando usuario de test..."
+            mysql -u root -p123456 -e "CREATE USER IF NOT EXISTS 'testuser'@'%' IDENTIFIED BY 'test1234';"
+            mysql -u root -p123456 -e "GRANT ALL PRIVILEGES ON calidad.* TO 'testuser'@'%';"
+            mysql -u root -p123456 -e "FLUSH PRIVILEGES;"
 
       # Step 2: Build del proyecto
       - run:
@@ -30,25 +40,25 @@ jobs:
 
       # Step 3: Ejecución CalculadoraTest (Unitarias)
       - run:
-          name: 1. Unitarias - CalculadoraTest
+          name: Ejecución CalculadoraTest (Unitarias)
           command: mvn test -Dtest=CalculadoraTest
 
       # Step 4: Ejecución pruebas unitarias restantes
       - run:
-          name: 2. Unitarias - Otros Servicios
+          name: Ejecución pruebas unitarias (otros servicios)
           command: mvn test -Dtest=!CalculadoraTest,!**/*IntegrationTest,!**/funcionales/**
 
-      # Step 5: Pruebas de integración (DBUnit)
+      # Step 5: Ejecución Pruebas de Integración (DBUnit)
       - run:
           name: 3. Ejecutar Pruebas de Integración (DBUnit)
           command: mvn test -Dtest=**/*IntegrationTest
 
-      # Step 6: Pruebas Funcionales (Selenium Headless)
+      # Step 6: Pruebas Funcionales (Selenium)
       - run:
           name: 4. Ejecutar Pruebas Funcionales (Selenium)
           command: mvn test -Dtest=**/funcionales/**
 
-      # Guardar reportes para Test Insights y Badge
+      # Step 7: Guardar reportes para Test Insights y Badge
       - store_test_results:
           path: target/surefire-reports
       - store_artifacts:
