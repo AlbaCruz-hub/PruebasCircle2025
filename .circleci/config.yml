@@ -46,18 +46,12 @@ jobs:
       - run:
           name: Ejecución Pruebas de Integración (DBUnit)
           command: mvn test -Dtest=**/*IntegrationTest
+    #Step 6: Pruebas Funcionales
+      name: 6. Ejecutar Pruebas Funcionales (Selenium)
+          command: mvn test -Dtest=**/funcionales/**
 
-      # Step 6: Ejecución pruebas Funcionales Selenium - CRUD
-      - run:
-          name: Ejecución Pruebas Funcionales Selenium - CRUD
-          command: mvn test -Dtest=**/funcionales/CRUDFuncionalTest
 
-      # Step 7: Ejecución pruebas Funcionales Selenium - UADY Virtual
-      - run:
-          name: Ejecución Pruebas Funcionales Selenium - UADY Virtual
-          command: mvn test -Dtest=**/funcionales/UadyFallidoTest
-
-      # Step 8: Guardar reportes para Test Insights y Badge
+      # Step 7: Guardar reportes para Test Insights y Badge
       - store_test_results:
           path: target/surefire-reports
       - store_artifacts:
