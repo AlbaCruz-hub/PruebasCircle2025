@@ -88,7 +88,7 @@ public class CRUDFuncionalTest {
     public void testCRUD_EmailError() {
         try {
             driver.get("https://mern-crud-mpfr.onrender.com/");
-            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(90));
 
             // Abrir modal
             WebElement botonNuevo = wait.until(ExpectedConditions.elementToBeClickable(

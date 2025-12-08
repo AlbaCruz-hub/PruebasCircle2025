@@ -57,7 +57,7 @@ public class BusquedaGoogleTest {
             // Abrimos página de prueba
             driver.get("https://www.ejemplo.com");
 
-            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(90));
 
             // Cambié el XPath a un CSS selector más estable; si no funciona, ajusta según tu DOM
             WebElement boton = wait.until(

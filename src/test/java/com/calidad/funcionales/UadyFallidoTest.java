@@ -52,25 +52,24 @@ public class UadyFallidoTest {
             passwordInput.clear();
             passwordInput.sendKeys("V1n9y8jr");
 
-            // Si necesitas interactuar con otro elemento antes de enviar login
+            // Interactuar con el contenedor principal si es necesario
             WebElement regionBox = wait.until(
                     ExpectedConditions.elementToBeClickable(By.id("region-main-box"))
             );
             regionBox.click();
 
-            // Espera a que el botón de login sea clickeable
-            WebElement loginBtn = wait.until(
-                    ExpectedConditions.elementToBeClickable(By.id("loginbtn"))
-            );
-
-            // Cambiar contraseña antes de enviar login
+            // Cambiar la contraseña antes de hacer login
             passwordInput.clear();
             passwordInput.sendKeys("1234gdg");
 
+            // Espera a que el botón de login sea clickeable y hacer clic
+            WebElement loginBtn = wait.until(
+                    ExpectedConditions.elementToBeClickable(By.id("loginbtn"))
+            );
             loginBtn.click();
 
-            // Aquí puedes agregar validación si la página de inicio carga correctamente
-            wait.until(ExpectedConditions.urlContains("dashboard")); // ejemplo
+            // Validación opcional: esperar a que se cargue la página de dashboard
+            wait.until(ExpectedConditions.urlContains("dashboard"));
 
         } catch (Exception e) {
             verificationErrors.append("testAccesoUADY: " + e.toString() + "\n");
@@ -88,6 +87,7 @@ public class UadyFallidoTest {
         }
     }
 
+    // ==================== MÉTODOS AUXILIARES ====================
     private boolean isElementPresent(By by) {
         try {
             driver.findElement(by);
