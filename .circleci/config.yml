@@ -25,19 +25,21 @@ jobs:
       # Step 1: Inicializar MySQL
       - run:
           name: Inicializar MySQL
-          command: dockerize -wait tcp://localhost:3306 -timeout 1m
+          command: |
+            echo "Esperando a que MySQL esté disponible..."
+            dockerize -wait tcp://localhost:3306 -timeout 60s
 
       # Step 2: Build del proyecto
       - run:
           name: Compilar proyecto Maven
           command: mvn -B -DskipTests clean package
 
-      # Step 3: Ejecución CalculadoraTest (unitarias)
+      # Step 3: Ejecución CalculadoraTest (Unitarias)
       - run:
           name: Ejecución CalculadoraTest (Unitarias)
           command: mvn test -Dtest=CalculadoraTest
 
-      # Step 4: Ejecución pruebas Unitarias restantes
+      # Step 4: Ejecución pruebas unitarias restantes
       - run:
           name: Ejecución pruebas unitarias (otros servicios)
           command: mvn test -Dtest=!CalculadoraTest,!**/*IntegrationTest,!**/funcionales/**
@@ -46,11 +48,11 @@ jobs:
       - run:
           name: Ejecución Pruebas de Integración (DBUnit)
           command: mvn test -Dtest=**/*IntegrationTest
-    #Step 6: Pruebas Funcionales
-      - run:
-      name: Ejecución  Pruebas Funcionales (Selenium)
-          command: mvn test -Dtest=**/funcionales/**
 
+      # Step 6: Pruebas Funcionales (Selenium)
+      - run:
+          name: Ejecución Pruebas Funcionales (Selenium)
+          command: mvn test -Dtest=**/funcionales/**
 
       # Step 7: Guardar reportes para Test Insights y Badge
       - store_test_results:
