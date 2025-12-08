@@ -24,68 +24,63 @@ public class BusquedaGoogleTest {
 
     @BeforeEach
     public void setUp() {
-    
         ChromeOptions options = new ChromeOptions();
-        options.addArguments("--headless"); 
-        options.addArguments("--disable-gpu"); 
-        options.addArguments("--window-size=1920,1080"); 
-        options.addArguments("--no-sandbox"); 
-        options.addArguments("--disable-dev-shm-usage"); 
+        options.addArguments("--headless"); // Ejecutar sin GUI
+        options.addArguments("--disable-gpu");
+        options.addArguments("--window-size=1920,1080");
+        options.addArguments("--no-sandbox");
+        options.addArguments("--disable-dev-shm-usage"); // Estabilidad en Linux CI
         driver = new ChromeDriver(options);
     }
 
     @Test
     public void testTituloFelisCatus() {
         try {
-            // Abrimos la página
             driver.get("https://es.wikipedia.org/wiki/Gato_dom%C3%A9stico");
 
             // Espera explícita hasta que el título contenga "Felis catus"
-            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
             wait.until(ExpectedConditions.titleContains("Felis catus"));
 
-            // Obtenemos el título actual
             String tituloActual = driver.getTitle();
-
-            // Comprobamos que el título contiene "Felis catus"
             assertTrue(tituloActual.contains("Felis catus"), 
                 "El título no contiene 'Felis catus'");
 
         } catch (Exception e) {
-            verificationErrors.append(e.toString());
+            verificationErrors.append("testTituloFelisCatus: " + e.toString() + "\n");
         }
     }
 
     @Test
     public void testBotonEjemplo() {
         try {
-            // Abrimos página de prueba para demo de botón
+            // Abrimos página de prueba
             driver.get("https://www.ejemplo.com");
 
-            // Espera explícita a que el botón esté presente
-            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+
+            // Cambié el XPath a un CSS selector más estable; si no funciona, ajusta según tu DOM
             WebElement boton = wait.until(
-                ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[@id='root']/div/div[2]/button"))
+                ExpectedConditions.elementToBeClickable(By.cssSelector("div#root > div > div:nth-child(2) > button"))
             );
 
             // Comprobamos que el botón esté habilitado
             assertTrue(boton.isEnabled(), "El botón no está habilitado");
 
         } catch (Exception e) {
-            verificationErrors.append(e.toString());
+            verificationErrors.append("testBotonEjemplo: " + e.toString() + "\n");
         }
     }
 
     @AfterEach
     public void tearDown() {
-        // Cerramos el navegador
         if (driver != null) {
             driver.quit();
         }
 
-        // Verificamos errores acumulados
+        // Si hay errores acumulados, fallamos el test
         String verificationErrorString = verificationErrors.toString();
-        if (!"".equals(verificationErrorString)) {
+        if (!verificationErrorString.isEmpty()) {
             fail(verificationErrorString);
         }
     }
