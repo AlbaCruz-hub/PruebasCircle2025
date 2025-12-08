@@ -1,123 +1,103 @@
+
 package com.calidad.funcionales;
 
-import static org.junit.jupiter.api.Assertions.fail;
-
-import java.time.Duration;
-
+import java.util.regex.Pattern;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.hamcrest.CoreMatchers.*;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
+import org.openqa.selenium.support.ui.Select;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
 
+import org.apache.commons.io.FileUtils;
+import java.io.File;
+import java.time.Duration;
+import org.openqa.selenium.chrome.ChromeOptions;
+
 public class UadyFallidoTest {
-
-    private WebDriver driver;
-    private StringBuffer verificationErrors = new StringBuffer();
-    private JavascriptExecutor js;
-    private boolean acceptNextAlert = true;
-
-    @BeforeEach
+  private WebDriver driver;
+  private String baseUrl;
+  private boolean acceptNextAlert = true;
+  private StringBuffer verificationErrors = new StringBuffer();
+  JavascriptExecutor js;
+  @BeforeEach
     public void setUp() throws Exception {
         WebDriverManager.chromedriver().setup();
-
+        
         ChromeOptions options = new ChromeOptions();
-        options.addArguments("--headless=new");
+        options.addArguments("--headless=new"); // <--- CRUCIAL
         options.addArguments("--no-sandbox");
         options.addArguments("--disable-dev-shm-usage");
         options.addArguments("--window-size=1920,1080");
         options.addArguments("--remote-allow-origins=*");
 
-        driver = new ChromeDriver(options);
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+        driver = new ChromeDriver(options); // <--- Pasamos las opciones aquí
+
+        baseUrl = "https://www.google.com/";
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(60));
         js = (JavascriptExecutor) driver;
     }
 
-    @Test
-    public void testAccesoUADY() {
-        try {
-            driver.get("https://es.uadyvirtual.uady.mx/login/index.php");
+  @Test
+  public void testAccesoUADY() throws Exception {
+    driver.get("https://es.uadyvirtual.uady.mx/login/index.php");
+    driver.findElement(By.id("password")).clear();
+    driver.findElement(By.id("password")).sendKeys("V1n9y8jr");
+    driver.findElement(By.id("region-main-box")).click();
+    driver.findElement(By.id("region-main-box")).click();
+    Thread.sleep(5000);
+    driver.findElement(By.id("password")).clear();
+    driver.findElement(By.id("password")).sendKeys("1234gdg");
+    driver.findElement(By.id("loginbtn")).click();
+  }
 
-            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
-
-            // Espera a que el campo de contraseña sea visible y luego envía la primera clave
-            WebElement passwordInput = wait.until(
-                    ExpectedConditions.visibilityOfElementLocated(By.id("password"))
-            );
-            passwordInput.clear();
-            passwordInput.sendKeys("V1n9y8jr");
-
-            // Interactuar con el contenedor principal si es necesario
-            WebElement regionBox = wait.until(
-                    ExpectedConditions.elementToBeClickable(By.id("region-main-box"))
-            );
-            regionBox.click();
-
-            // Cambiar la contraseña antes de hacer login
-            passwordInput.clear();
-            passwordInput.sendKeys("1234gdg");
-
-            // Espera a que el botón de login sea clickeable y hacer clic
-            WebElement loginBtn = wait.until(
-                    ExpectedConditions.elementToBeClickable(By.id("loginbtn"))
-            );
-            loginBtn.click();
-
-            // Validación opcional: esperar a que se cargue la página de dashboard
-            wait.until(ExpectedConditions.urlContains("dashboard"));
-
-        } catch (Exception e) {
-            verificationErrors.append("testAccesoUADY: " + e.toString() + "\n");
-        }
+  @AfterEach
+  public void tearDown() throws Exception {
+    driver.quit();
+    String verificationErrorString = verificationErrors.toString();
+    if (!"".equals(verificationErrorString)) {
+      fail(verificationErrorString);
     }
+  }
 
-    @AfterEach
-    public void tearDown() {
-        if (driver != null) {
-            driver.quit();
-        }
-        String verificationErrorString = verificationErrors.toString();
-        if (!verificationErrorString.isEmpty()) {
-            fail(verificationErrorString);
-        }
+  private boolean isElementPresent(By by) {
+    try {
+      driver.findElement(by);
+      return true;
+    } catch (NoSuchElementException e) {
+      return false;
     }
+  }
 
-    // ==================== MÉTODOS AUXILIARES ====================
-    private boolean isElementPresent(By by) {
-        try {
-            driver.findElement(by);
-            return true;
-        } catch (NoSuchElementException e) {
-            return false;
-        }
+  private boolean isAlertPresent() {
+    try {
+      driver.switchTo().alert();
+      return true;
+    } catch (NoAlertPresentException e) {
+      return false;
     }
+  }
 
-    private boolean isAlertPresent() {
-        try {
-            driver.switchTo().alert();
-            return true;
-        } catch (NoAlertPresentException e) {
-            return false;
-        }
+  private String closeAlertAndGetItsText() {
+    try {
+      Alert alert = driver.switchTo().alert();
+      String alertText = alert.getText();
+      if (acceptNextAlert) {
+        alert.accept();
+      } else {
+        alert.dismiss();
+      }
+      return alertText;
+    } finally {
+      acceptNextAlert = true;
     }
+  }
 
-    private String closeAlertAndGetItsText() {
-        try {
-            Alert alert = driver.switchTo().alert();
-            String alertText = alert.getText();
-            if (acceptNextAlert) {
-                alert.accept();
-            } else {
-                alert.dismiss();
-            }
-            return alertText;
-        } finally {
-            acceptNextAlert = true;
-        }
-    }
+
 }
