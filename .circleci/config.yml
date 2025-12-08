@@ -3,31 +3,25 @@ version: 2.1
 jobs:
   build-and-test:
     docker:
-      # IMAGEN 1: OpenJDK + Browsers (para Maven y Selenium)
       - image: cimg/openjdk:21.0-browsers
         environment:
           MAVEN_OPTS: "-Xmx3200m"
-      # IMAGEN 2: MySQL 8.0 (para pruebas de integración DBUnit)
-      - image: cimg/mysql:8.0
-        environment:
-          MYSQL_DATABASE: calidad
-          MYSQL_ROOT_PASSWORD: 123456
-          MYSQL_ROOT_HOST: "%"
-          MYSQL_TCP_PORT: 3306
-
     steps:
-      # Step 0: Clonar el repositorio
+      # Step 0: Instalar MySQL en el contenedor principal
+      - run:
+          name: Instalar MySQL
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y mysql-server
+            sudo service mysql start
+            echo "Esperando a que MySQL esté disponible..."
+            dockerize -wait tcp://127.0.0.1:3306 -timeout 120s
+
+      # Step 1: Clonar repositorio
       - checkout
       - run:
           name: Inicio del pipeline
           command: echo "Iniciando pipeline completo"
-
-      # Step 1: Inicializar MySQL
-      - run:
-          name: Inicializar MySQL
-          command: |
-            echo "Esperando a que MySQL esté disponible..."
-            dockerize -wait tcp://mysql:3306 -timeout 60s
 
       # Step 2: Build del proyecto
       - run:
@@ -36,22 +30,22 @@ jobs:
 
       # Step 3: Ejecución CalculadoraTest (Unitarias)
       - run:
-          name: Ejecución CalculadoraTest (Unitarias)
+          name: 1. Unitarias - CalculadoraTest
           command: mvn test -Dtest=CalculadoraTest
 
       # Step 4: Ejecución pruebas unitarias restantes
       - run:
-          name: Ejecución pruebas unitarias (otros servicios)
+          name: 2. Unitarias - Otros Servicios
           command: mvn test -Dtest=!CalculadoraTest,!**/*IntegrationTest,!**/funcionales/**
 
-      # Step 5: Ejecución Pruebas de Integración (DBUnit)
+      # Step 5: Pruebas de integración (DBUnit)
       - run:
-          name: Ejecución Pruebas de Integración (DBUnit)
+          name: 3. Ejecutar Pruebas de Integración (DBUnit)
           command: mvn test -Dtest=**/*IntegrationTest
 
-      # Step 6: Pruebas Funcionales (Selenium)
+      # Step 6: Pruebas Funcionales (Selenium Headless)
       - run:
-          name: Ejecución Pruebas Funcionales (Selenium)
+          name: 4. Ejecutar Pruebas Funcionales (Selenium)
           command: mvn test -Dtest=**/funcionales/**
 
       # Guardar reportes para Test Insights y Badge
